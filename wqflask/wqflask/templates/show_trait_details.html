@@ -1,51 +1,57 @@
 <table class="table">
     <tr>
-        <td>Species and Group</td>
+        <td width="150px"><b>Species and Group</b></td>
         <td>{{ this_trait.dataset.group.species }}, {{ this_trait.dataset.group.name }}</td>
     </tr>
     {% if this_trait.dataset.type == 'Publish' %}
     <tr>
-        <td>Phenotype</td>
+        <td><b>Phenotype</b></td>
         <td><div style="width:40%;">{{ this_trait.description_fmt }}</div></td>
     </tr>
     <tr>
-        <td>Authors</td>
+        <td><b>Authors</b></td>
         <td><div style="width:40%;">{{ this_trait.authors }}</div></td>
     </tr>
     <tr>
-        <td>Title</td>
+        <td><b>Title</b></td>
         <td><div style="width:40%;">{{ this_trait.title }}</div></td>
     </tr>
     <tr>
-        <td>Journal</td>
-        <td>{{ this_trait.journal }} (<a href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&db=PubMed&list_uids={{ this_trait.pubmed_id }}&dop=Abstract" target="_blank" title="PubMed">{{ this_trait.year }}</a>)</td>
+        <td><b>Journal</b></td>
+        <td>{{ this_trait.journal }} ({% if this_trait.pubmed_id %}<a href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&db=PubMed&list_uids={{ this_trait.pubmed_id }}&dop=Abstract" target="_blank" title="PubMed">{{ this_trait.year }}</a>{% else %}{{ this_trait.year }}{% endif %})</td>
     </tr>
     {% else %}
     <tr>
-        <td>Tissue</td>
+        <td><b>Tissue</b></td>
         <td>{{ this_trait.dataset.tissue }}</td>
     </tr>
     {% endif %}
     {% if this_trait.dataset.type == 'ProbeSet' %}
     {% if this_trait.symbol != None %}
     <tr>
-        <td>Gene Symbol</td>
+        <td><b>Gene Symbol</b></td>
         <td>{{ this_trait.symbol }}</td>
     </tr>
     {% endif %}
     <tr>
-        <td>Aliases</td>
-        <td>{{ this_trait.alias_fmt|replace(",",";") }}</td>
+        <td><b>Aliases</b></td>
+        <td>Wikidata: {{ this_trait.wikidata_alias_fmt|replace(",",";") }}</td>
     </tr>
+    {% if this_trait.alias_fmt != "Not Available" %}
+    <tr>
+        <td></td>
+        <td>GeneNetwork: {{ this_trait.alias_fmt|replace(",",";") }}</td>
+    </tr>
+    {% endif %}
     {% endif %}
     {% if this_trait.dataset.type != 'Publish' %}
     <tr>
-        <td>Location</td>
+        <td><b>Location</b></td>
         <td>{{ this_trait.location_fmt }}</td>
     </tr>
     {% endif %}
     <tr>
-        <td>Database</td>
+        <td><b>Database</b></td>
         <td>
             <a href="http://genenetwork.org/webqtl/main.py?FormID=sharinginfo&InfoPageName={{ dataset.name }}" target="_blank">
                 {{ dataset.fullname }}
@@ -54,7 +60,7 @@
     </tr>
     {% if this_trait.probe_set_specificity %}
     <tr>
-        <td>Target Score</td>
+        <td><b>Target Score</b></td>
         <td>
             <a href="http://genenetwork.org/blatInfo.html" target="_blank" title="Values higher than 2 for the specificity are good">
                 BLAT Specificity
@@ -69,7 +75,7 @@
     {% endif %}
     {% if this_trait.pubmed_id or this_trait.geneid or this_trait.omim or this_trait.symbol %}
     <tr>
-        <td>Resource Links</td>
+        <td><b>Resource Links</b></td>
         <td>
             {% if pubmed_link %}
             <a href="{{ pubmed_link }}" target="_blank" title="PubMed">
@@ -94,15 +100,15 @@
             </a>
             &nbsp;&nbsp;
             {% endif %}
-            {% if unigene_link %}
-            <a href="{{ unigene_link }}" target="_blank" title="NCBI UniGene">
-                UniGene
+            {% if protein_atlas_link %}
+            <a href="{{ protein_atlas_link }}" target="_blank" title="Human Protein Atlas">
+                    Protein Atlas
             </a>
             &nbsp;&nbsp;
             {% endif %}
-            {% if genbank_link %}
-            <a href="{{ genbank_link }}" target="_blank" title="Find the original GenBank sequence used to design the probes">
-                GenBank
+            {% if open_targets_link %}
+            <a href="{{ open_targets_link }}" target="_blank" title="Open Targets">
+                Open Targets
             </a>
             &nbsp;&nbsp;
             {% endif %}
@@ -213,6 +219,9 @@
         </a>
         {% endif %}
         {% endif %}
+        <a target="_blank" href="http://www.genenetwork.org/webqtl/main.py?cmd=show&db={{ this_trait.dataset.name }}&probeset={{ this_trait.name }}">
+        <button type="button" id="view_in_gn1" class="btn btn-primary" title="View Trait in GN1">View in GN1</button>
+        </a>
     </div>
 </div>
 
