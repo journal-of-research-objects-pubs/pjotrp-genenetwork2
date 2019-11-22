@@ -1,6 +1,8 @@
 from __future__ import print_function, division
 
 import string
+import requests
+import json
 
 from flask import Flask, g
 
@@ -106,18 +108,34 @@ class MrnaAssaySearch(DoSearch):
                      'Max LRS Location',
                      'Additive Effect']
 
-    def get_where_clause(self):
+    def get_alias_where_clause(self):
+        search_string = escape(self.search_term[0])
 
         if self.search_term[0] != "*":
-            match_clause = """(MATCH (ProbeSet.Name,
+            match_clause = """((MATCH (ProbeSet.symbol) AGAINST ('%s' IN BOOLEAN MODE))) and """ % (search_string)
+        else:
+            match_clause = ""
+
+        where_clause = (match_clause +
+            """ProbeSet.Id = ProbeSetXRef.ProbeSetId
+               and ProbeSetXRef.ProbeSetFreezeId = %s
+                        """ % (escape(str(self.dataset.id))))
+
+        return where_clause
+
+    def get_where_clause(self):
+        search_string = escape(self.search_term[0])
+
+        if self.search_term[0] != "*":
+            match_clause = """((MATCH (ProbeSet.Name,
                         ProbeSet.description,
                         ProbeSet.symbol,
                         alias,
                         GenbankId,
                         UniGeneId,
                         Probe_Target_Description)
-                        AGAINST ('%s' IN BOOLEAN MODE)) and
-                                """ % (escape(self.search_term[0]))
+                        AGAINST ('%s' IN BOOLEAN MODE))) AND
+                                """ % (search_string)
         else:
             match_clause = ""
 
@@ -233,7 +251,8 @@ class PhenotypeSearch(DoSearch):
                         WHERE PublishXRef.InbredSetId = %s
                         and PublishXRef.PhenotypeId = Phenotype.Id
                         and PublishXRef.PublicationId = Publication.Id
-                        and PublishFreeze.Id = %s""" % (
+                        and PublishFreeze.Id = %s
+                        ORDER BY PublishXRef.Id""" % (
                             from_clause,
                             escape(str(self.dataset.group.id)),
                             escape(str(self.dataset.id))))
@@ -244,7 +263,8 @@ class PhenotypeSearch(DoSearch):
                         and PublishXRef.InbredSetId = %s
                         and PublishXRef.PhenotypeId = Phenotype.Id
                         and PublishXRef.PublicationId = Publication.Id
-                        and PublishFreeze.Id = %s""" % (
+                        and PublishFreeze.Id = %s
+                        ORDER BY PublishXRef.Id""" % (
                             from_clause,
                             where_clause,
                             escape(str(self.dataset.group.id)),
@@ -867,6 +887,29 @@ def is_number(s):
         return True
     except ValueError:
         return False
+
+def get_aliases(symbol, species):
+    if species == "mouse":
+        symbol_string = symbol.capitalize()
+    elif species == "human":
+        symbol_string = symbol.upper()
+    else:
+        return []
+
+    filtered_aliases = []
+    response = requests.get("http://gn2.genenetwork.org/gn3/gene/aliases/" + symbol_string)
+    if response:
+        alias_list = json.loads(response.content)
+
+        seen = set()
+        for item in alias_list:
+            if item in seen:
+                continue
+            else:
+                filtered_aliases.append(item)
+                seen.add(item)
+
+    return filtered_aliases
 
 if __name__ == "__main__":
     ### Usually this will be used as a library, but call it from the command line for testing

@@ -53,7 +53,7 @@ class AnonCollection(object):
 
         #ZS: Find id and set it if the collection doesn't already exist
         if Redis.get(self.key) == "None" or Redis.get(self.key) == None:
-            Redis.set(self.key, None) #ZS: For some reason I get the error "Operation against a key holding the wrong kind of value" if I don't do this
+            Redis.set(self.key, "None") #ZS: For some reason I get the error "Operation against a key holding the wrong kind of value" if I don't do this
         else:
             collections_list = json.loads(Redis.get(self.key))
             collection_position = 0 #ZS: Position of collection in collection_list, if it exists
@@ -100,7 +100,7 @@ class AnonCollection(object):
                     collection_exists = True
                     break
             if collection_exists:
-                collections_list[collection_position]['members'].extend(self.traits)
+                collections_list[collection_position]['members'] += list(set(self.traits) - set(collections_list[collection_position]['members']))
                 collections_list[collection_position]['num_members'] = len(collections_list[collection_position]['members'])
                 collections_list[collection_position]['changed_timestamp'] = datetime.datetime.utcnow().strftime('%b %d %Y %I:%M%p')
             else:
@@ -259,7 +259,7 @@ def create_new(collection_name):
 
     if "hash" in params:
         unprocessed_traits = Redis.get(params['hash'])
-        Redis.delete(hash)
+        Redis.delete(params['hash'])
     else:
         unprocessed_traits = params['traits']
 

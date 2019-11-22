@@ -25,7 +25,7 @@
 
   <table>
     <tr>
-      <td style="vertical-align: middle;">Width <input class="chartupdatewh" id="width" type="text" value="800" style="width: 44px; height: 22px;"> px</td>
+      <td style="vertical-align: middle;">Width <input class="chartupdatewh" id="width" type="text" value="800" style="width: 44px; height: 22px;"> px </td>
       <td style="vertical-align: middle;">Height <input class="chartupdatewh" id="height" type="text" value="700" style="width: 44px; height: 22px;"> px</td>
     </tr>
   </table>
@@ -145,7 +145,7 @@
           </tr>
           <tr>
             <td>Slope</td>
-            <td>{{'%0.3f' % jsdata.slope}}</td>
+            <td>{{ jsdata.slope_string }}</td>
           </tr>
           <tr>
             <td>Intercept</td>
@@ -163,7 +163,7 @@
             <td style="text-align: left;" colspan="2">
               Regression Line
               <br>
-              y = {{'%0.3f' % jsdata.slope}} * x + {{'%0.3f' % jsdata.intercept}}
+              y = {{ jsdata.slope_string }} * x + {{'%0.3f' % jsdata.intercept}}
             </td>
           </tr>
         </tbody>
@@ -192,6 +192,16 @@
           <a href="{{trait_1.pubmed_link}}">PubMed: {{trait_1.pubmed_text}}</a>
             {{trait_1.description_display}}
         </div>
+        {% elif trait_1.dataset.type == "Geno" %}
+        <div>
+          X axis:
+          <a href="{{url_for('show_trait_page', trait_id = trait_1.name, dataset = trait_1.dataset.name)}}">
+            {{trait_1.dataset.group.species + " " + trait_1.dataset.group.name + " " + trait_1.dataset.name + ": " + trait_1.name|string}}
+          </a>
+        </div>
+        <div>
+          Location: {{trait_1.location_repr}} Mb
+        </div>
         {% endif %}
 
         <br/>
@@ -218,6 +228,16 @@
           <a href="{{trait_2.pubmed_link}}">PubMed: {{trait_2.pubmed_text}}</a>
             {{trait_2.description_display}}
         </div>
+        {% elif trait_2.dataset.type == "Geno" %}
+        <div>
+          Y axis:
+          <a href="{{url_for('show_trait_page', trait_id = trait_2.name, dataset = trait_2.dataset.name)}}">
+            {{trait_2.dataset.group.species + " " + trait_2.dataset.group.name + " " + trait_2.dataset.name + ": " + trait_2.name|string}}
+          </a>
+        </div>
+        <div>
+          Location: {{trait_2.location_repr}} Mb
+        </div>
         {% endif %}
       </div>
       </div>
@@ -240,7 +260,7 @@
             </tr>
             <tr>
               <td>Slope</td>
-              <td>{{'%0.3f' % jsdata.srslope}}</td>
+              <td>{{ jsdata.srslope_string }}</td>
             </tr>
             <tr>
               <td>Intercept</td>
@@ -253,6 +273,13 @@
 	    <tr>
               <td>P value</td>
               <td>{% if jsdata.srp_value < 0.001 %}{{'%0.3e' % jsdata.srp_value}}{% else %}{{'%0.3f' % jsdata.srp_value}}{% endif %}</td>
+            </tr>
+            <tr>
+              <td style="text-align: left;" colspan="2">
+                Regression Line
+                <br>
+                y = {{ jsdata.srslope_string }} * x + {{'%0.3f' % jsdata.srintercept}}
+              </td>
             </tr>
           </tbody>
         </table>

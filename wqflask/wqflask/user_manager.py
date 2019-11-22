@@ -99,6 +99,8 @@ class AnonUser(object):
             for collection in collections:
                 collection['created_timestamp'] = datetime.datetime.strptime(collection['created_timestamp'], '%b %d %Y %I:%M%p')
                 collection['changed_timestamp'] = datetime.datetime.strptime(collection['changed_timestamp'], '%b %d %Y %I:%M%p')
+
+            collections = sorted(collections, key = lambda i: i['changed_timestamp'], reverse = True)
             return collections
 
     def import_traits_to_user(self):
@@ -234,7 +236,8 @@ class UserSession(object):
         user_info = response['hits']['hits'][0]['_source']
         if 'collections' in user_info.keys():
             if len(user_info['collections']) > 0:
-                return json.loads(user_info['collections'])
+                collection_list = json.loads(user_info['collections'])
+                return sorted(collection_list, key = lambda i: datetime.datetime.strptime(i['changed_timestamp'], '%b %d %Y %I:%M%p'), reverse=True)
             else:
                 return []
         else:
@@ -789,7 +792,7 @@ class LoginUser(object):
         user_details = get_user_by_unique_column(es, "user_id", user_id)
         if user_details:
             user = model.User()
-            user.id = user_details["user_id"]
+            user.id = user_details["user_id"] if user_details["user_id"] == None else "N/A"
             user.full_name = user_details["name"]
             user.login_type = user_details["login_type"]
             return self.actual_login(user)
@@ -886,6 +889,9 @@ class LoginUser(object):
         session_id_signature = actual_hmac_creation(login_rec.session_id)
         session_id_signed = login_rec.session_id + ":" + session_id_signature
         logger.debug("session_id_signed:", session_id_signed)
+
+        if not user.id:
+            user.id = ''
 
         session = dict(login_time = time.time(),
                        user_id = user.id,

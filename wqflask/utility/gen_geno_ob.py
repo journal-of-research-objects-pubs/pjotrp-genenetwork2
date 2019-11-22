@@ -47,20 +47,20 @@ class genotype(object):
                 elif line[0] == "@":
                     label = line.split(":")[0][1:]
                     if label == "name":
-                        self.group = line.split(":")[1]
+                        self.group = line.split(":")[1].strip()
                     elif label == "filler":
-                        if line.split(":")[1] == "yes":
+                        if line.split(":")[1].strip() == "yes":
                             self.filler = True
                     elif label == "type":
-                        self.type = line.split(":")[1]
+                        self.type = line.split(":")[1].strip()
                     elif label == "mat":
-                        self.mat = line.split(":")[1]
+                        self.mat = line.split(":")[1].strip()
                     elif label == "pat":
-                        self.pat = line.split(":")[1]
+                        self.pat = line.split(":")[1].strip()
                     elif label == "het":
-                        self.het = line.split(":")[1]
+                        self.het = line.split(":")[1].strip()
                     elif label == "unk":
-                        self.unk = line.split(":")[1]
+                        self.unk = line.split(":")[1].strip()
                     else:
                         continue
                 elif line[:3] == "Chr":
@@ -115,7 +115,10 @@ class Locus(object):
     def __init__(self, marker_row, geno_ob):
         self.chr = marker_row[0]
         self.name = marker_row[1]
-        self.cM = float(marker_row[geno_ob.cm_column])
+        try:
+            self.cM = float(marker_row[geno_ob.cm_column])
+        except:
+            self.cM = float(marker_row[geno_ob.mb_column]) if geno_ob.mb_exists else 0
         self.Mb = float(marker_row[geno_ob.mb_column]) if geno_ob.mb_exists else None
 
         geno_table = {
@@ -130,6 +133,7 @@ class Locus(object):
             start_pos = 4
         else:
             start_pos = 3
+
         for allele in marker_row[start_pos:]:
             if allele in geno_table.keys():
                 self.genotype.append(geno_table[allele])

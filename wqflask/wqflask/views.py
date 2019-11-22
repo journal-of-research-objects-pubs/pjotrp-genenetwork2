@@ -125,12 +125,13 @@ def index_page():
         import_collections = params['import_collections']
         if import_collections == "true":
             g.cookie_session.import_traits_to_user()
-    if USE_GN_SERVER:
-        # The menu is generated using GN_SERVER
-        return render_template("index_page.html", gn_server_url = GN_SERVER_URL, version=GN_VERSION)
-    else:
-        # Old style static menu (OBSOLETE)
-        return render_template("index_page_orig.html", version=GN_VERSION)
+    #if USE_GN_SERVER:
+    #    # The menu is generated using GN_SERVER
+    #    return render_template("index_page.html", gn_server_url = GN_SERVER_URL, version=GN_VERSION)
+    #else:
+
+    # Old style static menu (OBSOLETE)
+    return render_template("index_page_orig.html", version=GN_VERSION)
 
 
 @app.route("/tmp/<img_path>")
@@ -216,7 +217,7 @@ def gsearch_updating():
 @app.route("/docedit")
 def docedit():
     logger.info(request.url)
-    doc = docs.Docs(request.args['entry'])
+    doc = docs.Docs(request.args['entry'], request.args)
     return render_template("docedit.html", **doc.__dict__)
 
 @app.route('/generated/<filename>')
@@ -227,7 +228,7 @@ def generated_file(filename):
 @app.route("/help")
 def help():
     logger.info(request.url)
-    doc = docs.Docs("help")
+    doc = docs.Docs("help", request.args)
     return render_template("docs.html", **doc.__dict__)
 
 @app.route("/wgcna_setup", methods=('POST',))
@@ -260,46 +261,42 @@ def ctl_results():
     result = ctl.process_results(ctlA)                        # After the analysis is finished store the result
     return render_template("ctl_results.html", **result)      # Display them using the template
 
-#@app.route("/news")
-#def news_route():
-#    newsobject = news.News()
-#    return render_template("news.html", **newsobject.__dict__)
-
 @app.route("/news")
 def news():
-    doc = docs.Docs("news")
+    doc = docs.Docs("news", request.args)
     return render_template("docs.html", **doc.__dict__)
 
 @app.route("/references")
 def references():
-    # doc = docs.Docs("references")
-    # return render_template("docs.html", **doc.__dict__)
-    return render_template("reference.html")
+    doc = docs.Docs("references", request.args)
+    return render_template("docs.html", **doc.__dict__)
+    # return render_template("reference.html")
 
 @app.route("/intro")
 def intro():
-    doc = docs.Docs("intro")
+    doc = docs.Docs("intro", request.args)
     return render_template("docs.html", **doc.__dict__)
 
 @app.route("/policies")
 def policies():
-    doc = docs.Docs("policies")
+    doc = docs.Docs("policies", request.args)
     return render_template("docs.html", **doc.__dict__)
 
 @app.route("/links")
 def links():
-    doc = docs.Docs("links")
-    return render_template("docs.html", **doc.__dict__)
+    #doc = docs.Docs("links")
+    #return render_template("docs.html", **doc.__dict__)
+    return render_template("links.html")
 
 @app.route("/environments")
 def environments():
-    doc = docs.Docs("environments")
+    doc = docs.Docs("environments", request.args)
     return render_template("docs.html", **doc.__dict__)
 
 @app.route("/update_text", methods=('POST',))
 def update_page():
     docs.update_text(request.form)
-    doc = docs.Docs(request.form['entry_type'])
+    doc = docs.Docs(request.form['entry_type'], request.form)
     return render_template("docs.html", **doc.__dict__)
 
 @app.route("/submit_trait")
@@ -311,7 +308,7 @@ def submit_trait_form():
 @app.route("/create_temp_trait", methods=('POST',))
 def create_temp_trait():
     logger.info(request.url)
-    print("REQUEST.FORM:", request.form)
+
     #template_vars = submit_trait.SubmitTrait(request.form)
 
     doc = docs.Docs("links")

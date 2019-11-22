@@ -122,6 +122,9 @@ class ShowTrait(object):
             self.UCSC_BLAT_URL = ""
             self.UTHSC_BLAT_URL = ""
 
+        if self.dataset.type == "ProbeSet":
+            self.show_probes = "True"
+
         trait_units = get_trait_units(self.this_trait)
         self.get_external_links()
         self.build_correlation_tools()
@@ -264,6 +267,10 @@ class ShowTrait(object):
                 genbank_id = genbank_id[0:-1]
             self.genbank_link = webqtlConfig.GENBANK_ID % genbank_id
 
+        self.uniprot_link = None
+        if check_if_attr_exists(self.this_trait, 'uniprotid'):
+            self.uniprot_link = webqtlConfig.UNIPROT_URL % self.this_trait.uniprotid
+
         self.genotation_link = self.gtex_link = self.genebridge_link = self.ucsc_blat_link = self.biogps_link = self.protein_atlas_link = None
         self.string_link = self.panther_link = self.aba_link = self.ebi_gwas_link = self.wiki_pi_link = self.genemania_link = self.ensembl_link = None
         if self.this_trait.symbol:
@@ -332,7 +339,7 @@ class ShowTrait(object):
 
         # We're checking a string here!
         assert isinstance(this_group, basestring), "We need a string type thing here"
-        if this_group[:3] == 'BXD':
+        if this_group[:3] == 'BXD' and this_group != "BXD-Harvested":
             this_group = 'BXD'
 
         if this_group:
@@ -356,6 +363,10 @@ class ShowTrait(object):
     def make_sample_lists(self):
         all_samples_ordered = self.dataset.group.all_samples_ordered()
         
+        parent_f1_samples = []
+        if self.dataset.group.parlist and self.dataset.group.f1list:
+            parent_f1_samples = self.dataset.group.parlist + self.dataset.group.f1list
+
         primary_sample_names = list(all_samples_ordered)
 
         if not self.temp_trait:
@@ -368,8 +379,10 @@ class ShowTrait(object):
                     all_samples_ordered.append(sample)
                     other_sample_names.append(sample)
 
-            if self.dataset.group.species == "human":
+            #ZS: CFW is here because the .geno file doesn't properly contain its full list of samples. This should probably be fixed.
+            if self.dataset.group.species == "human" or (set(primary_sample_names) == set(parent_f1_samples)) or self.dataset.group.name == "CFW":
                 primary_sample_names += other_sample_names
+                other_sample_names = []
 
             if other_sample_names:
                 primary_header = "%s Only" % (self.dataset.group.name)
@@ -381,11 +394,8 @@ class ShowTrait(object):
                                             sample_group_type='primary',
                                             header=primary_header)
 
-            if other_sample_names and self.dataset.group.species != "human" and self.dataset.group.name != "CFW":
-                parent_f1_samples = None
-                if self.dataset.group.parlist and self.dataset.group.f1list:
-                    parent_f1_samples = self.dataset.group.parlist + self.dataset.group.f1list
-
+            #if other_sample_names and self.dataset.group.species != "human" and self.dataset.group.name != "CFW":
+            if len(other_sample_names) > 0:
                 other_sample_names.sort() #Sort other samples
                 if parent_f1_samples:
                     other_sample_names = parent_f1_samples + other_sample_names
@@ -522,7 +532,7 @@ def get_table_widths(sample_groups, has_num_cases=False):
 
 def has_num_cases(this_trait):
     has_n = False
-    if this_trait.dataset.type != "ProbeSet":
+    if this_trait.dataset.type != "ProbeSet" and this_trait.dataset.type != "Geno":
         for name, sample in this_trait.data.iteritems():
             if sample.num_cases:
                 has_n = True
@@ -543,6 +553,10 @@ def get_trait_units(this_trait):
                         inside_brackets = False
                 if i == "[":
                     inside_brackets = True
+
+    if unit_type == "":
+        unit_type = "Value"
+
     return unit_type
 
 def check_if_attr_exists(the_trait, id_type):

@@ -6,7 +6,6 @@
     <link rel="stylesheet" type="text/css" href="/static/new/css/prob_plot.css" />
     <link rel="stylesheet" type="text/css" href="/static/new/css/scatter-matrix.css" />
     <link rel="stylesheet" type="text/css" href="/static/new/css/d3-tip.min.css" />
-    <link rel="stylesheet" type="text/css" href="/static/new/packages/nvd3/nv.d3.css" />
     <link rel="stylesheet" type="text/css" href="/static/new/packages/DataTables/css/jquery.dataTables.css" />
     <link rel="stylesheet" type="text/css" href="/static/new/packages/noUiSlider/nouislider.css" />
     <link rel="stylesheet" type="text/css" href="/static/new/packages/noUiSlider/nouislider.pips.css" />
@@ -16,7 +15,7 @@
 {% block content %} <!-- Start of body -->
 
     <div class="container">
-        <h2>Trait Data and Analysis for <b>{{ this_trait.name }}</b></h2>
+        <h2>Trait Data and Analysis for <b>{{ this_trait.display_name }}</b></h2>
         {% if this_trait.dataset.type != 'Publish' %}
         <h3>{{ this_trait.description_fmt[0]|upper }}{{ this_trait.description_fmt[1:] }}</h3>
         {% endif %}
@@ -131,7 +130,6 @@
     </script>
 
     <script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
-    <script type="text/javascript" src="/static/new/packages/nvd3/nv.d3.js"></script>
     <script type="text/javascript" src="/static/new/js_external/underscore-min.js"></script>
     <script type="text/javascript" src="/static/new/js_external/underscore.string.min.js"></script>
     <script type="text/javascript" src="/static/new/js_external/d3-tip.min.js"></script>
@@ -227,7 +225,7 @@
                 {% endif %}
                 {% endif %}
 
-                $('#samples_primary').DataTable( {
+                var primary_table = $('#samples_primary').DataTable( {
                   'initComplete': function(settings, json) {
                     $('.edit_sample_value').change(function() {
                       edit_data_change();
@@ -270,6 +268,7 @@
                     {
                       'data': null,
                       'orderDataType': "dom-checkbox",
+                      'searchable' : false,
                       'render': function(data, type, row, meta) {
                         return '<input type="checkbox" name="searchResult" style="min-height: 20px;" class="checkbox edit_sample_checkbox" value="">'
                       }
@@ -277,7 +276,8 @@
                     {
                       'title': "ID",
                       'type': "natural",
-                      'data': "this_id"
+                      'data': "this_id",
+                      'searchable' : false
                     },
                     {
                       'title': "Sample",
@@ -304,6 +304,7 @@
                       'bSortable': false,
                       'type': "natural",
                       'data': null,
+                      'searchable' : false,
                       'render': function(data, type, row, meta) {
                         return '±'
                       }
@@ -327,7 +328,7 @@
                       'type': "cust-txt",
                       'data': null,
                       'render': function(data, type, row, meta) {
-                        if (data.num_cases == null) {
+                        if (data.num_cases == null || data.num_cases == undefined) {
                           return '<input type="text" data-value="x" data-qnorm="x" data-zscore="x" name="value:' + data.name + '" style="text-align: right;" class="trait_value_input edit_sample_num_cases" value="x" size=4 maxlength=4>'
                         } else {
                           return '<input type="text" data-value="' + data.num_cases + '" data-qnorm="x" data-zscore="x" name="value:' + data.name + '" style="text-align: right;" class="trait_value_input edit_sample_num_cases" value="' + data.num_cases + '" size=4 maxlength=4>'
@@ -339,7 +340,11 @@
                       'type': "natural",
                       'data': null,
                       'render': function(data, type, row, meta) {
-                        return data.extra_attributes['{{ sample_groups[0].attributes[attribute].name }}']
+                        if (data.extra_attributes['{{ sample_groups[0].attributes[attribute].name }}'] != null && data.extra_attributes['{{ sample_groups[0].attributes[attribute].name }}'] != undefined){
+                          return data.extra_attributes['{{ sample_groups[0].attributes[attribute].name }}']
+                        } else {
+                          return ""
+                        }
                       }
                     }{% endfor %}{% endif %}
                   ],
@@ -358,8 +363,12 @@
                   }
                 } );
 
+                $('#primary_searchbox').on( 'keyup', function () {
+                  primary_table.search($(this).val()).draw();
+                } );
+
                 {% if sample_groups|length != 1 %}
-                $('#samples_other').DataTable( {
+                var other_table = $('#samples_other').DataTable( {
                   'initComplete': function(settings, json) {
                     $('.edit_sample_value').change(function() {
                       edit_data_change();
@@ -402,6 +411,7 @@
                     {
                       'data': null,
                       'orderDataType': "dom-checkbox",
+                      'searchable' : false,
                       'render': function(data, type, row, meta) {
                         return '<input type="checkbox" name="searchResult" style="min-height: 20px;" class="checkbox edit_sample_checkbox" value="">'
                       }
@@ -409,7 +419,8 @@
                     {
                       'title': "ID",
                       'type': "natural",
-                      'data': "this_id"
+                      'data': "this_id",
+                      'searchable' : false
                     },
                     {
                       'title': "Sample",
@@ -436,6 +447,7 @@
                       'bSortable': false,
                       'type': "natural",
                       'data': null,
+                      'searchable' : false,
                       'render': function(data, type, row, meta) {
                         return '±'
                       }
@@ -471,7 +483,11 @@
                       'type': "natural",
                       'data': null,
                       'render': function(data, type, row, meta) {
-                        return data.extra_attributes['{{ sample_groups[1].attributes[attribute].name }}']
+                        if (data.extra_attributes['{{ sample_groups[1].attributes[attribute].name }}'] != null && data.extra_attributes['{{ sample_groups[1].attributes[attribute].name }}'] != undefined){
+                          return data.extra_attributes['{{ sample_groups[1].attributes[attribute].name }}']
+                        } else {
+                          return ""
+                        }
                       }
                     }{% endfor %}{% endif %}
                   ],
@@ -488,6 +504,10 @@
                     'loadingRecords': '&nbsp;',
                     'processing': 'Loading...'
                   }
+                } );
+
+                $('#other_searchbox').on( 'keyup', function () {
+                  other_table.search($(this).val()).draw();
                 } );
                 {% endif %}
 

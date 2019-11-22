@@ -159,6 +159,10 @@ class DisplayMappingResults(object):
         if 'first_run' in start_vars:
             self.first_run = start_vars['first_run']
 
+        if 'temp_trait' in start_vars and start_vars['temp_trait'] != "False":
+            self.temp_trait = "True"
+            self.group = start_vars['group']
+
         #Needing for form submission when doing single chr mapping or remapping after changing options
         self.samples = start_vars['samples']
         self.vals = start_vars['vals']
@@ -1337,7 +1341,7 @@ class DisplayMappingResults(object):
 
         for i, _chr in enumerate(self.genotype):
             if _chr.name == self.ChrList[self.selectedChr][0]:
-                for j, _geno in enumerate(_chr[1]):
+                for j, _geno in enumerate(_chr[1].genotype):
 
                     plotbxd=0
                     for item in smd:
@@ -2066,7 +2070,7 @@ class DisplayMappingResults(object):
         #########################################
         #      Permutation Graph
         #########################################
-        myCanvas = pid.PILCanvas(size=(400,300))
+        myCanvas = pid.PILCanvas(size=(500,300))
         if 'lod_score' in self.qtlresults[0] and self.LRS_LOD == "LRS":
             perm_output = [value*4.61 for value in self.perm_output]
         elif 'lod_score' not in self.qtlresults[0] and self.LRS_LOD == "LOD":
@@ -2074,8 +2078,8 @@ class DisplayMappingResults(object):
         else:
             perm_output = self.perm_output
 
-        Plot.plotBar(myCanvas, perm_output, XLabel=self.LRS_LOD, YLabel='Frequency', title=' Histogram of Permutation Test')
         filename= webqtlUtil.genRandStr("Reg_")
+        Plot.plotBar(myCanvas, perm_output, XLabel=self.LRS_LOD, YLabel='Frequency', title=' Histogram of Permutation Test')
         myCanvas.save(GENERATED_IMAGE_DIR+filename, format='gif')
 
         return filename

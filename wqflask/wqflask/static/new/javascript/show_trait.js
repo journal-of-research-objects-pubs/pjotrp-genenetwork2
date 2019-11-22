@@ -221,6 +221,11 @@ update_histogram = function() {
     trait_vals.push(x.value);
   }
   root.histogram_data[0]['x'] = trait_vals
+
+  if ($('input[name="transform"]').val() != ""){
+    root.histogram_layout['xaxis']['title'] = "<b>" + js_data.unit_type +  " (" + $('input[name="transform"]').val() + ")</b>"
+  }
+
   Plotly.newPlot('histogram', root.histogram_data, root.histogram_layout, root.modebar_options);
   update_histogram_width()
 };
@@ -261,6 +266,14 @@ update_bar_chart = function() {
     }
   }
 
+  new_chart_range = get_bar_range(trait_vals, trait_vars)
+
+  root.bar_layout['yaxis']['range'] = new_chart_range
+
+  if ($('input[name="transform"]').val() != ""){
+    root.bar_layout['yaxis']['title'] = "<b>" + js_data.unit_type +  " (" + $('input[name="transform"]').val() + ")</b>"
+  }
+
   root.bar_data[0]['y'] = trait_vals
   root.bar_data[0]['error_y'] = {
     type: 'data',
@@ -297,6 +310,11 @@ update_box_plot = function() {
     }
     root.box_data[0]['y'] = trait_vals
   }
+
+  if ($('input[name="transform"]').val() != ""){
+    root.box_layout['yaxis']['title'] = "<b>" + js_data.unit_type +  " (" + $('input[name="transform"]').val() + ")</b>"
+  }
+
   Plotly.newPlot('box_plot', root.box_data, root.box_layout, root.modebar_options)
 }
 
@@ -323,6 +341,11 @@ update_violin_plot = function() {
     }
     root.violin_data[0]['y'] = trait_vals
   }
+
+  if ($('input[name="transform"]').val() != ""){
+    root.violin_layout['yaxis']['title'] = "<b>" + js_data.unit_type +  " (" + $('input[name="transform"]').val() + ")</b>"
+  }
+
   Plotly.newPlot('violin_plot', root.violin_data, root.violin_layout, root.modebar_options)
 }
 
@@ -860,9 +883,16 @@ if (Object.keys(js_data.sample_group_types).length > 1) {
 root.modebar_options = {
   modeBarButtonsToAdd:[{
     name: 'Export as SVG',
-    icon: Plotly.Icons.disk,
+    icon: Plotly.Icons.camera,
     click: function(gd) {
       Plotly.downloadImage(gd, {format: 'svg'})
+    }
+  },
+  {
+    name: 'Export as JPEG',
+    icon: Plotly.Icons.disk,
+    click: function(gd) {
+      Plotly.downloadImage(gd, {format: 'jpeg'})
     }
   }],
   modeBarButtonsToRemove:['toImage', 'sendDataToCloud', 'hoverClosest', 'hoverCompare', 'hoverClosestCartesian', 'hoverCompareCartesian', 'lasso2d', 'toggleSpikelines'],
@@ -886,16 +916,16 @@ var bar_trace = {
 
 root.bar_data = [bar_trace]
 
-get_bar_range = function(sample_list){
+get_bar_range = function(sample_vals, sample_errors = null){
   positive_error_vals = []
   negative_error_vals = []
-  for (i = 0;i < get_sample_vals(sample_list).length; i++){
-    if (get_sample_errors(sample_list)[0][i] != undefined) {
-        positive_error_vals.push(get_sample_vals(sample_list)[i] + get_sample_errors(sample_list)[0][i])
-        negative_error_vals.push(get_sample_vals(sample_list)[i] - get_sample_errors(sample_list)[0][i])
+  for (i = 0;i < sample_vals.length; i++){
+    if (sample_errors[i] != undefined) {
+        positive_error_vals.push(sample_vals[i] + sample_errors[i])
+        negative_error_vals.push(sample_vals[i] - sample_errors[i])
     } else {
-        positive_error_vals.push(get_sample_vals(sample_list)[i])
-        negative_error_vals.push(get_sample_vals(sample_list)[i])
+        positive_error_vals.push(sample_vals[i])
+        negative_error_vals.push(sample_vals[i])
     }
   }
 
@@ -920,12 +950,12 @@ get_bar_range = function(sample_list){
   return [range_bottom, range_top]
 }
 
-root.chart_range = get_bar_range(sample_lists[0])
+root.chart_range = get_bar_range(get_sample_vals(sample_lists[0]), get_sample_errors(sample_lists[0])[0])
 val_range = root.chart_range[1] - root.chart_range[0]
 
-if (val_range < 4){
+if (val_range < 5){
   tick_digits = '.1f'
-} else if (val_range < 0.4) {
+} else if (val_range < 0.5) {
   tick_digits = '.2f'
 } else {
   tick_digits = 'f'
@@ -994,7 +1024,7 @@ root.histogram_layout = {
   title: "<b>Trait " + js_data.trait_id + ": " + js_data.short_description + "</b>",
   xaxis: {
            autorange: true,
-           title: "<b>Value</b>",
+           title: js_data.unit_type,
            titlefont: {
              family: "arial",
              size: 20
